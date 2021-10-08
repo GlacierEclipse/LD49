@@ -31,6 +31,7 @@ class UIUpgradeBar extends UIBar
 
         if(upgradeType == "Helmet")
         {
+            fill = Globals.currentHelmetUpgrade * 25;
             cost = 20;
             textbitmap = new BitmapText("Helmet", -47 , 0, 0, 0, {size: 10});
             addGraphic(textbitmap);
@@ -38,6 +39,7 @@ class UIUpgradeBar extends UIBar
 
         if(upgradeType == "Hammer")
         {
+            fill = Globals.currentHammerUpgrade * 25;
             cost = 15;
             textbitmap = new BitmapText("Hammer", -47 , 0, 0, 0, {size: 10});
             addGraphic(textbitmap);
@@ -45,6 +47,7 @@ class UIUpgradeBar extends UIBar
 
         if(upgradeType == "GasMask")
         {
+            fill = Globals.currentGasMaskUpgrade * 25;
             cost = 15;
             textbitmap = new BitmapText("Gas Mask", -47 , 0, 0, 0, {size: 10});
             addGraphic(textbitmap);
