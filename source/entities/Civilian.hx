@@ -186,7 +186,7 @@ class Civilian extends GameEntity
         collidedEntity = collide("tiles", x + velocity.x, y);
         if(collidedEntity != null)
         {
-            if(velocity.x > 0)
+            if(collidedEntity.x - halfWidth > 0)
             {
                 x = collidedEntity.x - halfWidth;
 
@@ -194,7 +194,7 @@ class Civilian extends GameEntity
                 //    velocity.y = -3.7;
             }
 
-            else
+            else if(collidedEntity.right + halfWidth < World.mapWidth)
             {
                 x = collidedEntity.right + halfWidth;
 

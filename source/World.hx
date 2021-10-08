@@ -174,10 +174,13 @@ class World
         // Build the next floor 
 
         var potentialCivPosition:Array<Vector2> = new Array<Vector2>();
+        var tilePositions:Array<Vector2> = new Array<Vector2>();
 
         var fullFloor:Bool = true;
         var columnSize:Int = 2;
         var currentColumnTile:Int = 5;
+
+        var civsPosYStart:Int = 0;
         
         for (floor in 1...buildingFloors+1)
         {
@@ -186,6 +189,10 @@ class World
                 player = new Player(50, floorY - tileSize / 2.0);
                 addEntity(player);
             }
+            if(floor == 2)
+            {
+                civsPosYStart = Std.int(floorY / tileSize);
+            }
             // Build the floor
             if(fullFloor)
             {
@@ -193,6 +200,7 @@ class World
                 {
                     var smokeChance:Float = 10 + (difficultyLevel * 90);
                     addEntity(new Tile(i * tileSize, floorY, smokeChance, TileType.DYNAMIC));
+                    tilePositions.push(new Vector2(i, floorY / 16.0));
                 }
 
 
@@ -200,16 +208,6 @@ class World
                 var prevColumnTile:Int = currentColumnTile;
                 currentColumnTile = 4 + Random.randInt(buildingWidth - 8);
                 
-                var civXTile:Int = 1 + Random.randInt(buildingWidth - 1);
-                var civXTile1:Int = 1 + Random.randInt(buildingWidth - 1);
-                var civXTile2:Int = 1 + Random.randInt(buildingWidth - 1);
-                
-                if(floor!=1)
-                {
-                    potentialCivPosition.push(new Vector2(civXTile * tileSize + (-2.0 + Random.random) , floorY - tileSize / 2.0));
-                    potentialCivPosition.push(new Vector2(civXTile1 * tileSize + (-2.0 + Random.random), floorY - tileSize / 2.0));
-                    potentialCivPosition.push(new Vector2(civXTile2 * tileSize + (-2.0 + Random.random), floorY - tileSize / 2.0));
-                }
             }
             else
             {
@@ -222,27 +220,22 @@ class World
                     {
                         
                         addEntity(new Tile(i * tileSize, floorY, smokeChance, TileType.DYNAMIC));
+                        tilePositions.push(new Vector2(i, floorY / 16.0));
 
                     }
                     currentColumnTile = 2 + Random.randInt(xTile);
-
-                    var civXTile:Int = 1 + Random.randInt(currentColumnTile);
-                    potentialCivPosition.push(new Vector2(civXTile * tileSize, floorY - tileSize / 2.0));
                 }
                 else
                 {
                     for (i in xTile...(buildingWidth - 1))
                     {
                         addEntity(new Tile(i * tileSize, floorY, smokeChance, TileType.DYNAMIC));
-    
+                        tilePositions.push(new Vector2(i, floorY / 16.0));
                     }
 
                     currentColumnTile = xTile + Random.randInt(buildingWidth - xTile - 3);
                 }
 
-                
-               
-                
             }
     
             floorY += tileSize;
@@ -251,6 +244,7 @@ class World
             {
                 var smokeChance:Float = 10 + (difficultyLevel * 90);
                 addEntity(new Tile(currentColumnTile * tileSize, floorY, smokeChance, TileType.DYNAMIC, 1));
+                tilePositions.push(new Vector2(currentColumnTile, floorY / 16.0));
                 floorY += tileSize;
             }
 
@@ -258,6 +252,8 @@ class World
 
             
         }
+        
+
 
         World.mapHeight = Std.int(floorY + tileSize);
 
@@ -277,11 +273,40 @@ class World
         }
 
 
+        // Populate potential civ positions
+        for (floorXTile in 1...(buildingWidth-1))
+        {
+            for (floorYTile in civsPosYStart...Std.int(floorY / 16.0))
+            {
+                // If you have a tile below you and you are not on a tile it's a valid position.
+                var tileBelow:Bool = false;
+                var onTile:Bool = false;
+                for (tilePos in tilePositions)
+                {
+                    if(Std.int(tilePos.x) == Std.int(floorXTile) && Std.int(tilePos.y) == Std.int(floorYTile))
+                    {
+                        onTile = true;
+                        break;
+                    }
+                    if(Std.int(tilePos.x) == Std.int(floorXTile) && Std.int(tilePos.y) == Std.int(floorYTile + 1))
+                    {
+                        tileBelow = true;
+                    }
+                }
+
+                if(!onTile && tileBelow)
+                {
+                    potentialCivPosition.push(new Vector2(floorXTile * tileSize + (-5.0 + (Random.random * 10.0)) , floorYTile * tileSize));
+                }
+            }
+        }
+
+
         // Place civs
         for (i in 0...civilianAmount)
         {
             var randPosInd:Int = Random.randInt(potentialCivPosition.length);
-            addCivilian(new Civilian(potentialCivPosition[randPosInd].x, potentialCivPosition[randPosInd].y, 0.0));
+            addCivilian(new Civilian(potentialCivPosition[randPosInd].x + 8.0, potentialCivPosition[randPosInd].y + 8.0, 0.0));
             
         }
 
@@ -299,21 +324,6 @@ class World
 
     public function update() 
     {
-
-        // Little Check for completion
-        if(!checkAllCiviliansSaved())
-        {
-            for (civilianInd in worldCivilians.length-1...0)
-            {
-                var civ = worldCivilians[civilianInd];
-                if(civ.right < 0 || civ.x >= mapWidth)
-                {
-                    worldCivilians.remove(civ);
-                    Globals.gameScene.remove(civ);
-                }
-            }
-        }
-
         var amountCivSaved = getAmountCiviliansSaved();
         currentCiviliansText.currentText = "Civilians Saved " + amountCivSaved + "/" + (worldCivilians.length);
         currentScrapText.currentText = "Scrap: " + Globals.totalScrap;
